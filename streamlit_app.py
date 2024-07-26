@@ -5,8 +5,13 @@ import joblib
 from datetime import datetime
 from geopy.distance import geodesic
 
+class CustomPreprocessor:
+    def transform(self, data):
+        # Custom transformation logic
+        return data
+
 # Load the model
-model = joblib.load('nyc_taxi_model.pkl')  # Ensure the model file is saved in the repository
+model = joblib.load('nyc_taxi_model.pkl')
 
 # Define popular landmarks and their coordinates
 landmarks = {
@@ -17,7 +22,6 @@ landmarks = {
     'wtc': (-74.0134, 40.7128)
 }
 
-# Haversine function to calculate distance
 def haversine_np(lon1, lat1, lon2, lat2):
     lon1, lat1, lon2, lat2 = map(np.radians, [lon1, lat1, lon2, lat2])
     dlon = lon2 - lon1
@@ -27,27 +31,19 @@ def haversine_np(lon1, lat1, lon2, lat2):
     km = 6371 * c
     return km
 
-# Function to add landmark dropoff distances
 def add_landmark_dropoff_distance(df, landmark_name, landmark_lonlat):
     lon, lat = landmark_lonlat
     df[landmark_name + '_drop_distance'] = haversine_np(lon, lat, df['dropoff_longitude'], df['dropoff_latitude'])
 
-# Function to preprocess the input data
 def preprocess_input(pickup_datetime, pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude, passenger_count):
-    # Convert pickup_datetime to datetime
     pickup_datetime = pd.to_datetime(pickup_datetime)
-
-    # Extract features from datetime
     year = pickup_datetime.year
     month = pickup_datetime.month
     day = pickup_datetime.day
     weekday = pickup_datetime.weekday()
     hour = pickup_datetime.hour
-
-    # Calculate trip distance
     trip_distance = haversine_np(pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude)
 
-    # Create a DataFrame
     data = {
         'pickup_longitude': [pickup_longitude],
         'pickup_latitude': [pickup_latitude],
@@ -62,22 +58,14 @@ def preprocess_input(pickup_datetime, pickup_longitude, pickup_latitude, dropoff
         'trip_distance': [trip_distance]
     }
     input_df = pd.DataFrame(data)
-
-    # Add landmark distances
     for landmark, coords in landmarks.items():
         add_landmark_dropoff_distance(input_df, landmark, coords)
-
     return input_df
 
-# Define the Streamlit app
 def main():
     st.title("NYC Taxi Fare Prediction")
+    st.markdown("This app predicts the taxi fare in NYC based on input features.")
     
-    st.markdown("""
-    This app predicts the taxi fare in NYC based on input features.
-    """)
-    
-    # Input fields for the user
     pickup_datetime = st.text_input("Pickup DateTime", "2013-07-06 17:18:00")
     pickup_longitude = st.number_input("Pickup Longitude", -73.95)
     pickup_latitude = st.number_input("Pickup Latitude", 40.75)
@@ -86,13 +74,8 @@ def main():
     passenger_count = st.number_input("Passenger Count", 1, 10, 1)
 
     if st.button("Predict Fare"):
-        # Preprocess the input
         input_df = preprocess_input(pickup_datetime, pickup_longitude, pickup_latitude, dropoff_longitude, dropoff_latitude, passenger_count)
-        
-        # Make predictions
         prediction = model.predict(input_df)
-        
-        # Display the result
         st.success(f"Estimated Fare: ${prediction[0]:.2f}")
 
 if __name__ == '__main__':
