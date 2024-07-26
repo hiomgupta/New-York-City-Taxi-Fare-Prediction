@@ -4,14 +4,10 @@ import numpy as np
 import joblib
 from datetime import datetime
 from geopy.distance import geodesic
-
-class CustomPreprocessor:
-    def transform(self, data):
-        # Custom transformation logic
-        return data
+from xgboost import XGBRegressor
 
 # Load the model
-model = joblib.load('nyc_taxi_model.pkl')
+model = joblib.load('nyc_taxi_model.pkl')  # Ensure the model file is saved in the repository
 
 # Define popular landmarks and their coordinates
 landmarks = {
