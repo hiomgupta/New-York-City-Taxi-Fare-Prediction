@@ -3,10 +3,10 @@ import pandas as pd
 import numpy as np
 import joblib
 from datetime import datetime
-# from geopy.distance import geodesic
+from geopy.distance import geodesic
 
 # Load the model
-model = joblib.load('nyc_taxi_model.pkl')  # Ensure the model file is saved
+model = joblib.load('nyc_taxi_model.pkl')  # Ensure the model file is saved in the repository
 
 # Define popular landmarks and their coordinates
 landmarks = {
